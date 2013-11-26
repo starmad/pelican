@@ -152,7 +152,7 @@ def main():
         else:
             pelican.run()
     except Exception, e:
-        log.critical(unicode(e))
+        log.critical(unicode(e.message).encode("utf-8"))
 
         if (args.verbosity == log.DEBUG):
             raise
