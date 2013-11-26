@@ -43,7 +43,11 @@ _DEFAULT_CONFIG = {'PATH': None,
                    'DEFAULT_METADATA': (),
                    'FILES_TO_COPY': (),
                    'DEFAULT_STATUS': 'published',
-                   'ARTICLE_PERMALINK_STRUCTURE': ''
+                   'ARTICLE_PERMALINK_STRUCTURE': '',
+                   'IMAP_HOSTNAME': '',
+                   'IMAP_USERNAME': '',
+                   'IMAP_PASSWORD': '',
+                   'IMAP_READBOX': ''
                    }
 
 def read_settings(filename):

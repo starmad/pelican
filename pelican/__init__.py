@@ -3,7 +3,7 @@ import os
 import time
 
 from pelican.generators import (ArticlesGenerator, PagesGenerator,
-        StaticGenerator, PdfGenerator)
+        StaticGenerator, PdfGenerator, CommentsGenerator)
 from pelican.settings import read_settings
 from pelican.utils import clean_output_dir, files_changed
 from pelican.writers import Writer
@@ -77,7 +77,7 @@ class Pelican(object):
 
 
     def get_generator_classes(self):
-        generators = [ArticlesGenerator, PagesGenerator, StaticGenerator]
+        generators = [ArticlesGenerator, PagesGenerator, StaticGenerator, CommentsGenerator]
         if self.settings['PDF_GENERATOR']:
             generators.append(PdfGenerator)
         return generators

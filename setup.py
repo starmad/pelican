@@ -5,7 +5,7 @@ import platform
 
 VERSION = "2.7.2" # find a better way to do so.
 
-requires = ['feedgenerator', 'jinja2', 'pygments', 'docutils', 'pytz']
+requires = ['feedgenerator', 'jinja2', 'pygments', 'docutils', 'pytz','dateutils']
 if sys.version_info < (2,7):
     requires.append('argparse')
 

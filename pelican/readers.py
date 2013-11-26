@@ -113,6 +113,35 @@ class MarkdownReader(Reader):
             metadata[name] = _process_metadata(name, value[0])
         return content, metadata
 
+class CommentReader(Reader):
+    enabled = bool(Markdown)
+    extension = "comment"
+
+    def read(self, text):
+        metaText = []
+        contentText = []
+        metaSection = True
+        for line in text.split("\n"):
+            if line.startswith("----------"):
+                metaSection = False
+                continue
+            if metaSection:
+                metaText.append(line)
+            else:
+                contentText.append(line)
+        
+        md = Markdown(extensions = ['meta'], safe_mode="escape" )
+        md.convert("\n".join(metaText))
+        metadata = {}
+        for name, value in md.Meta.items():
+            name = name.lower()
+            metadata[name] = _process_metadata(name, value[0])
+        
+        md = Markdown(extensions = ['codehilite'],safe_mode="escape")
+        content = md.convert("\n".join(contentText))
+
+        print metadata
+        return content, metadata
 
 class HtmlReader(Reader):
     extension = "html"
@@ -139,7 +168,7 @@ def read_file(filename, fmt=None, settings=None):
     if not fmt:
         fmt = filename.split('.')[-1]
     if fmt not in _EXTENSIONS.keys():
-        raise TypeError('Pelican does not know how to parse %s' % filename)
+        raise TypeError('Pelican does not know how to parse %s of extension %s' % (filename, fmt))
     reader = _EXTENSIONS[fmt]()
     settings_key = '%s_EXTENSIONS' % fmt.upper()
     if settings and settings_key in settings:

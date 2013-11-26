@@ -1,0 +1,42 @@
+<div id="comments">
+
+  <h2>Commentaires:</h2>
+  <div id="commentSection">
+    <ol id="commentsList">
+    {% for slug, _comments in comments %}
+      {% if article.slug == slug %}
+        {% for comment in _comments %}
+          <li>
+            Par 
+            {% if comment.website %}
+              <a class="author" href="{{comment.website|e}}">{{ comment.author|e }}</a>
+            {% else %}
+              {{ comment.author|e }}
+            {% endif %}
+            le <span class="date">{{ comment.locale_date }}</span>
+            <div class="commentContent">
+             {{ comment.content }}
+            </div> 
+          </li>
+        {% endfor %}
+      {% endif %}
+    {% endfor %} 
+    </ol>
+  </div>
+
+  <div class="answer">
+    <h3>Répondre :</h3>
+    <form name='comment' method='POST' accept-charset="UTF-8" action='http://your.website/send_comment.py'>
+      <input type='hidden' name='slug' value="{{ article.slug }}" />
+      <input type='hidden' name='lang' value="{{ article.lang }}" />
+      <table>
+      <tr><td>Nom:</td><td><input type='text' name='realname' size='20'/>*</td></tr>
+      <tr><td>Email:</td><td><input type='text' name='email' size='20'/>*</td></tr>
+      <tr><td>Site web:</td><td><input type='text' name='website' size='20' value='http://'/></td></tr>
+      <tr><td>Commentaire: *</td><td/></tr>
+      </table>
+      <textarea name='comment' cols='100' rows='10'></textarea><br/>
+      <input type='submit' name='Submit' value="Poster un commentaire"/>
+    </form>
+  </div>
+</div>

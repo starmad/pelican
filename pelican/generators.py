@@ -14,7 +14,7 @@ from jinja2.exceptions import TemplateNotFound
 
 from pelican.utils import copy, get_relative_path, process_translations, open
 from pelican.utils import slugify
-from pelican.contents import Article, Page, is_valid_content
+from pelican.contents import Article, Page, is_valid_content, Comment
 from pelican.readers import read_file
 from pelican.log import *
 
@@ -313,6 +313,74 @@ class ArticlesGenerator(Generator):
         self.generate_feeds(writer)
         self.generate_pages(writer)
 
+class CommentsGenerator(Generator):
+    """Generate comments"""
+
+    def __init__(self, *args, **kwargs):
+        self.comments = {}
+        super(CommentsGenerator, self).__init__(*args, **kwargs)
+
+    def generate_context(self):
+        for article in self.context['articles']:
+            if article.slug not in self.comments.keys():
+                self.comments[article.slug] = []
+        try:
+            import imaplib,email
+            from StringIO import StringIO
+        except ImportError:
+            raise Exception("unable to find imaplib or mail")
+        try:
+            connection = imaplib.IMAP4_SSL(self.settings['IMAP_HOSTNAME'])
+            connection.login(self.settings['IMAP_USERNAME'], self.settings['IMAP_PASSWORD'])
+        except:
+            raise Exception("unable to connect to imap server "+self.settings['IMAP_HOSTNAME']+" with "+self.settings['IMAP_USERNAME'])
+
+        try:
+            connection.select(self.settings['IMAP_READBOX'],readonly=True)
+        except:
+            raise Exception("unable to select box "+self.settings['IMAP_READBOX'])
+        
+        try:
+            typ, msg_ids = connection.search(None, 'UNDELETED')
+        except:
+            raise Exception("oups")
+        if True:
+#        try:
+            for msg_id in msg_ids[0].split():
+                typ, msg_data = connection.fetch(msg_id, '(RFC822)')
+                msg_data = msg_data[0]
+                raw_content = None
+                if isinstance(msg_data, tuple):
+                    msg = email.message_from_string(msg_data[1])
+                    if msg.is_multipart():
+                        print "should no be multipart"
+                        continue
+                    raw_content = msg.get_payload(decode=True)
+                if raw_content:
+                    charset = msg.get_content_charset()
+                    if not charset:
+                        charset = "utf8"
+                    try:
+                        unicode_content = raw_content.decode(charset)
+                    except:
+                        charset = "iso-8859-1"
+                        unicode_content = raw_content.decode(charset)
+                    content, metadata = read_file(unicode_content,"comment")
+                comment = Comment(content, metadata, settings=self.settings, msg=msg)
+                if not is_valid_content(comment, str(msg_id)):
+                    continue
+                
+ 
+                if comment.slug not in self.comments.keys():
+                    self.comments[comment.slug] = []
+                self.comments[comment.slug].append(comment)
+
+            for slug, commentlist in self.comments.items():
+                commentlist.sort(key=lambda comment : comment.date)
+        self._update_context(('comments', ))
+#        except:
+#            raise Exception("unable to connect to get data")
+            
 
 class PagesGenerator(Generator):
     """Generate pages"""

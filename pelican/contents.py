@@ -5,6 +5,11 @@ from pelican.settings import _DEFAULT_CONFIG
 from os import getenv
 from sys import platform, stdin
 
+from datetime import datetime
+from dateutil.parser import parse as dateparse
+
+from hashlib import md5
+
 class Page(object):
     """Represents a page
     Given a content, and metadata, create an adequate object.
@@ -113,6 +118,49 @@ class Article(Page):
 
 class Quote(Page):
     base_properties = ('author', 'date')
+    
+class Comment(Page):
+    mandatory_properties = ('author', 'date', 'slug', 'lang', )
+    
+    def __init__(self, content, metadata=None, settings=None, msg=None):
+        # init parameters
+        if not metadata:
+            metadata = {}
+        if not settings:
+            settings = _DEFAULT_CONFIG
+
+        self._content = content
+
+        local_metadata = dict(settings.get('DEFAULT_METADATA', ()))
+        local_metadata.update(metadata)
+
+        # set metadata as attributes
+        for key, value in local_metadata.items():
+            setattr(self, key.lower(), value)
+
+        if msg:
+            self.msg = msg
+
+        # manage the date format
+        if hasattr(self, 'lang') and self.lang in settings['DATE_FORMATS']:
+            self.date_format = settings['DATE_FORMATS'][self.lang]
+        else:
+            self.date_format = settings['DEFAULT_DATE_FORMAT']
+            
+        if not hasattr(self, 'id'):
+            setattr(self, 'id', md5(self._content.encode('utf8')).hexdigest())
+        
+        if not hasattr(self, 'parent'):
+            setattr(self, 'parent', 0)
+
+        if not hasattr(self, 'date'):
+            setattr(self, 'date', dateparse(msg['date']))
+#            setattr(self, 'date', datetime.strptime(msg['date'], "%X %x"))
+
+        if hasattr(self, 'website') and getattr(self, 'website').strip() == u"http://":
+            setattr(self, 'website', u"")
+      
+        self.locale_date = self.date.strftime(self.date_format.encode('ascii','xmlcharrefreplace')).decode('utf')
 
 
 def is_valid_content(content, f):
